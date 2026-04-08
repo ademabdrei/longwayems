@@ -8,13 +8,21 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import os
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-change-this-in-production-xyz123abc456def789'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-change-this-in-production-xyz123abc456def789')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+# Allow GitHub Codespaces domains
+if 'CODESPACE_NAME' in os.environ:
+    codespace_name = os.environ['CODESPACE_NAME']
+    codespace_domain = f"{codespace_name}-8000.app.github.dev"
+    ALLOWED_HOSTS.extend([codespace_domain, f"*.{codespace_domain}"])
 
 # Application definition
 INSTALLED_APPS = [
