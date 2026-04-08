@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .detail-card, .timeline-card, .assignment-summary-card { border:1px solid #dbe3ef; box-shadow:0 14px 30px rgba(31,45,61,.08); }
+    .section-label { font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:#64748b; margin-bottom:.75rem; font-weight:700; }
+    .assignment-timeline { position:relative; display:grid; gap:1rem; }
+    .timeline-item { display:grid; grid-template-columns:18px 1fr; gap:.9rem; align-items:start; }
+    .timeline-dot { width:14px; height:14px; border-radius:50%; margin-top:1rem; box-shadow:0 0 0 4px #e2e8f0; }
+    .timeline-card { border-radius:1rem; background:#fff; padding:1rem; }
+    .empty-panel { border:1px dashed #cbd5e1; border-radius:1rem; padding:1.25rem; text-align:center; color:#64748b; background:#f8fafc; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-person-circle me-2"></i>{{ employee.full_name }}</h2>
+            <div class="text-muted">{{ employee.position }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" onclick="openAssignmentModal({{ employee.pk }})"><i class="bi bi-plus-lg me-1"></i>Assign Project</button>
+            {% if current_assignment %}<button type="button" class="btn btn-outline-danger" onclick="openAssignmentModal({{ employee.pk }})"><i class="bi bi-stop-circle me-1"></i>End Assignment</button>{% endif %}
+            <a href="{% url 'employees:employee_update' employee.pk %}" class="btn btn-warning"><i class="bi bi-pencil me-1"></i>Edit</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="detail-card card">
+                <div class="card-body text-center py-4">
+                    {% if employee.profile_picture %}
+                    <img src="{{ employee.profile_picture.url }}" alt="{{ employee.full_name }}" class="rounded-circle mb-3" width="132" height="132" style="object-fit: cover;">
+                    {% else %}
+                    <div class="bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:132px;height:132px;font-size:2.5rem;">{{ employee.first_name|first|upper }}{{ employee.last_name|first|upper }}</div>
+                    {% endif %}
+                    <h4 class="mb-1">{{ employee.full_name }}</h4>
+                    <div class="text-muted mb-3">{{ employee.position }}</div>
+                    <span class="badge bg-{% if employee.status == 'Active' %}success{% else %}secondary{% endif %}">{{ employee.status }}</span>
+                </div>
+            </div>
+            <div class="detail-card card mt-4">
+                <div class="card-header bg-white py-3"><h5 class="mb-0">Current Project</h5></div>
+                <div class="card-body">
+                    {% if current_assignment %}
+                    <div class="assignment-summary-card rounded-4 p-3">
+                        <div class="fw-semibold">{{ current_assignment.project.project_name }}</div>
+                        <div class="small text-muted">{{ current_assignment.start_date|date:"M d, Y" }} to Present</div>
+                        <span class="badge bg-success mt-2">Active</span>
+                    </div>
+                    {% else %}
+                    <div class="empty-panel">No current assignment.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="detail-card card mb-4">
+                <div class="card-header bg-white py-3"><h5 class="mb-0">Employee Details</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><div class="section-label">Email</div><div>{{ employee.email|default:'Not provided' }}</div></div>
+                        <div class="col-md-6"><div class="section-label">Phone</div><div>{{ employee.phone|default:'Not provided' }}</div></div>
+                        <div class="col-md-6"><div class="section-label">Gender</div><div>{{ employee.gender }}</div></div>
+                        <div class="col-md-6"><div class="section-label">Nationality</div><div>{{ employee.nationality|default:'Not provided' }}</div></div>
+                        <div class="col-md-6"><div class="section-label">Hire Date</div><div>{{ employee.hire_date|date:"F d, Y" }}</div></div>
+                        <div class="col-md-6"><div class="section-label">Basic Salary</div><div>AED {{ employee.basic_salary|floatformat:2 }}</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-card card">
+                <div class="card-header bg-white py-3"><h5 class="mb-0">Assignment History</h5></div>
+                <div class="card-body">
+                    {% include 'employees/includes/assignment_history_timeline.html' with assignment_history=assignment_history %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="assignmentModalContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function openAssignmentModal(employeeId) {
+    const response = await fetch(`/employees/${employeeId}/assignment/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const data = await response.json();
+    document.getElementById('assignmentModalContainer').innerHTML = data.html;
+    bindAssignmentModal();
+    new bootstrap.Modal(document.getElementById('assignmentModal')).show();
+}
+
+function bindAssignmentModal() {
+    const assignForm = document.getElementById('assignProjectForm');
+    const endForm = document.getElementById('endAssignmentForm');
+    if (assignForm) assignForm.addEventListener('submit', submitAssignmentForm);
+    if (endForm) endForm.addEventListener('submit', submitAssignmentForm);
+}
+
+async function submitAssignmentForm(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const response = await fetch(form.dataset.url, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const data = await response.json();
+    if (data.success) { window.location.reload(); return; }
+    document.getElementById('assignmentModalContainer').innerHTML = data.html;
+    bindAssignmentModal();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('assignmentModal')).show();
+}
+</script>
+{% endblock %}

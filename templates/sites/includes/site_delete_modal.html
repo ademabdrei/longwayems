@@ -1,0 +1,17 @@
+<div class="modal-header bg-danger text-white">
+    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Site</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <p>Are you sure you want to delete the site "<strong>{{ site.site_name }}</strong>"?</p>
+    <p class="text-danger"><small>This action cannot be undone. All projects and related data at this site will also be affected.</small></p>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <form action="{% url 'sites:site_delete_modal' site.pk %}" method="post">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger" onclick="submitSiteForm(this.closest('form') ? null : null, 'delete', {{ site.pk }})">
+            <i class="bi bi-trash me-1"></i> Delete
+        </button>
+    </form>
+</div>

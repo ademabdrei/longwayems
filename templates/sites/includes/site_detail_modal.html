@@ -1,0 +1,72 @@
+<div class="modal-header">
+    <h5 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Site Details</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <strong>Site Name:</strong><br>{{ site.site_name }}
+        </div>
+        <div class="col-md-6">
+            <strong>Status:</strong><br>
+            {% if site.status == 'Active' %}<span class="badge bg-success">{{ site.status }}</span>
+            {% else %}<span class="badge bg-secondary">{{ site.status }}</span>{% endif %}
+        </div>
+        <div class="col-md-6">
+            <strong>Emirate:</strong><br>{{ site.emirate|default:"—" }}
+        </div>
+        <div class="col-md-6">
+            <strong>Manager:</strong><br>{{ site.manager.get_full_name|default:"—" }}
+        </div>
+        <div class="col-12">
+            <strong>Location:</strong><br>{{ site.location|default:"—" }}
+        </div>
+        <div class="col-md-4">
+            <strong>Total Projects:</strong><br>{{ site.total_projects }}
+        </div>
+        <div class="col-md-4">
+            <strong>Active Projects:</strong><br>{{ site.active_projects }}
+        </div>
+        <div class="col-md-4">
+            <strong>Active Employees:</strong><br>{{ site.active_employees }}
+        </div>
+        {% if site.notes %}
+        <div class="col-12">
+            <strong>Notes:</strong><br>{{ site.notes }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if projects %}
+    <hr>
+    <h6>Projects at this Site</h6>
+    <ul class="list-group list-group-flush">
+        {% for project in projects %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ project.project_name }}</span>
+            {% if project.status == 'Active' %}<span class="badge bg-success">{{ project.status }}</span>
+            {% else %}<span class="badge bg-secondary">{{ project.status }}</span>{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if active_assignments %}
+    <hr>
+    <h6>Assigned Employees</h6>
+    <div class="row g-2">
+        {% for assignment in active_assignments %}
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-person-circle me-2"></i>
+                <span>{{ assignment.employee.full_name }}</span>
+                <small class="text-muted ms-2">({{ assignment.employee.position }})</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

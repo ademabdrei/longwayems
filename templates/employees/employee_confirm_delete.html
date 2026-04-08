@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                    </h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-person-x display-1 text-danger mb-3"></i>
+                    <h4>Are you sure you want to delete this employee?</h4>
+                    <p class="text-muted mb-4">
+                        <strong>{{ employee.full_name }}</strong>
+                    </p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                    
+                    <!-- Employee Info -->
+                    <div class="text-start bg-light p-3 rounded mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Position</small>
+                                <div>{{ employee.position }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Status</small>
+                                <div>{{ employee.status }}</div>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Email</small>
+                                <div>{{ employee.email|default:'-' }}</div>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <small class="text-muted">Hire Date</small>
+                                <div>{{ employee.hire_date|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-lg me-1"></i>Yes, Delete
+                            </button>
+                            <a href="{% url 'employees:employee_detail' employee.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

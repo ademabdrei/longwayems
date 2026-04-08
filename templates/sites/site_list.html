@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Sites{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-geo-alt me-2"></i>{{ page_title }}</h2>
+            <p class="text-muted mb-0">Manage construction sites and field locations</p>
+        </div>
+        <button class="btn btn-primary" onclick="openSiteModal('create')">
+            <i class="bi bi-plus-circle me-1"></i> Add Site
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card bg-gradient-primary">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="mb-1 opacity-75">Total Sites</p>
+                        <h3 class="mb-0">{{ total_sites }}</h3>
+                    </div>
+                    <i class="bi bi-geo-alt fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card bg-gradient-success">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="mb-1 opacity-75">Active Sites</p>
+                        <h3 class="mb-0">{{ active_sites }}</h3>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card bg-gradient-warning">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="mb-1 opacity-75">Completed</p>
+                        <h3 class="mb-0">{{ completed_sites }}</h3>
+                    </div>
+                    <i class="bi bi-flag fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search sites..."
+                           value="{{ current_search }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="emirate" class="form-select">
+                        <option value="">All Emirates</option>
+                        {% for value, label in emirate_choices %}
+                            <option value="{{ value }}" {% if current_emirate == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'sites:site_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle me-1"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sites Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Site Name</th>
+                            <th>Emirate</th>
+                            <th>Manager</th>
+                            <th>Status</th>
+                            <th>Projects</th>
+                            <th>Employees</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for site in sites %}
+                        <tr>
+                            <td class="ps-4">
+                                <strong>{{ site.site_name }}</strong>
+                                {% if site.location %}
+                                    <br><small class="text-muted"><i class="bi bi-geo me-1"></i>{{ site.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ site.emirate|default:"—" }}</td>
+                            <td>{{ site.manager.get_full_name|default:"—" }}</td>
+                            <td>
+                                {% if site.status == 'Active' %}
+                                    <span class="badge bg-success">{{ site.status }}</span>
+                                {% elif site.status == 'Completed' %}
+                                    <span class="badge bg-secondary">{{ site.status }}</span>
+                                {% elif site.status == 'On Hold' %}
+                                    <span class="badge bg-warning">{{ site.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ site.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-primary">{{ site.active_project_count }}</span></td>
+                            <td><span class="badge bg-info">{{ site.active_employee_count }}</span></td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="openSiteModal('detail', {{ site.pk }})" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="openSiteModal('edit', {{ site.pk }})" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="openSiteModal('delete', {{ site.pk }})" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No sites found. Click "Add Site" to create one.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Site Modal Container -->
+<div class="modal fade" id="siteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="siteModalContent">
+        </div>
+    </div>
+</div>
+
+<script>
+function openSiteModal(action, pk) {
+    const modal = new bootstrap.Modal(document.getElementById('siteModal'));
+    const content = document.getElementById('siteModalContent');
+
+    let url;
+    switch(action) {
+        case 'create': url = "{% url 'sites:site_create_modal' %}"; break;
+        case 'edit': url = "{% url 'sites:site_update_modal' 0 %}".replace('0', pk); break;
+        case 'detail': url = "{% url 'sites:site_detail_modal' 0 %}".replace('0', pk); break;
+        case 'delete': url = "{% url 'sites:site_delete_modal' 0 %}".replace('0', pk); break;
+    }
+
+    fetch(url, {
+        method: action !== 'create' && action !== 'edit' ? 'GET' : 'GET',
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            content.innerHTML = data.html;
+            modal.show();
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+
+function submitSiteForm(formId, action, pk) {
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+    let url = form.action;
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            document.getElementById(formId).outerHTML = data.form_html;
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
+{% endblock %}

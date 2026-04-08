@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-people me-2"></i>{{ page_title }}
+        </h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="bi bi-plus-lg me-1"></i>New User
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Total Users</h6>
+                        <h3 class="mb-0 mt-2">{{ total_users }}</h3>
+                    </div>
+                    <i class="bi bi-people display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Admins</h6>
+                        <h3 class="mb-0 mt-2">{{ admin_users }}</h3>
+                    </div>
+                    <i class="bi bi-shield-check display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Managers</h6>
+                        <h3 class="mb-0 mt-2">{{ manager_users }}</h3>
+                    </div>
+                    <i class="bi bi-person-badge display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Active</h6>
+                        <h3 class="mb-0 mt-2">{{ active_users }}</h3>
+                    </div>
+                    <i class="bi bi-check-circle display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Name, email, username..." 
+                           value="{{ current_search }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select">
+                        <option value="">All Roles</option>
+                        {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Inactive" {% if current_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>Filter
+                    </button>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-lg me-1"></i>Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" 
+                                             alt="{{ user.full_name }}"
+                                             class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                        <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-semibold">{{ user.full_name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone|default:'-' }}</td>
+                            <td>
+                                {% if user.role == 'Admin' %}
+                                    <span class="badge bg-danger">{{ user.role }}</span>
+                                {% elif user.role == 'Manager' %}
+                                    <span class="badge bg-primary">{{ user.role }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ user.role }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-warning" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editUserModal"
+                                            data-user-id="{{ user.pk }}"
+                                            data-user-username="{{ user.username }}"
+                                            data-user-email="{{ user.email }}"
+                                            data-user-firstname="{{ user.first_name }}"
+                                            data-user-lastname="{{ user.last_name }}"
+                                            data-user-phone="{{ user.phone|default:'' }}"
+                                            data-user-role="{{ user.role }}"
+                                            data-user-active="{{ user.is_active|yesno:'true,false' }}"
+                                            title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteUserModal"
+                                            data-user-id="{{ user.pk }}"
+                                            data-user-name="{{ user.full_name }}"
+                                            data-user-url="{% url 'accounts:user_delete' user.pk %}"
+                                            title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No users found</h5>
+                <p class="text-muted">Get started by creating your first user.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <i class="bi bi-plus-lg me-1"></i>Create User
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="{% url 'accounts:user_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-lg me-2"></i>Create New User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Role <span class="text-danger">*</span></label>
+                            <select name="role" class="form-select" required>
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Active User
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" id="editUserForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil me-2"></i>Edit User
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="user_id" id="edit_user_id">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" name="username" id="edit_username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" id="edit_firstname" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" id="edit_lastname" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="edit_email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Role <span class="text-danger">*</span></label>
+                            <select name="role" id="edit_role" class="form-select" required>
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="edit_is_active">
+                        <label class="form-check-label" for="edit_is_active">
+                            Active User
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-lg me-1"></i>Update User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="deleteUserForm">
+                {% csrf_token %}
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-person-x display-1 text-danger mb-3"></i>
+                    <h5>Are you sure you want to delete this user?</h5>
+                    <p class="text-muted mb-3" id="delete_user_name"></p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-check-lg me-1"></i>Yes, Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle Edit Modal - populate with user data
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById('editUserModal');
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('edit_user_id').value = button.dataset.userId;
+            document.getElementById('edit_username').value = button.dataset.userUsername;
+            document.getElementById('edit_email').value = button.dataset.userEmail;
+            document.getElementById('edit_firstname').value = button.dataset.userFirstname;
+            document.getElementById('edit_lastname').value = button.dataset.userLastname;
+            document.getElementById('edit_phone').value = button.dataset.userPhone;
+            document.getElementById('edit_role').value = button.dataset.userRole;
+            document.getElementById('edit_is_active').checked = button.dataset.userActive === 'true';
+            
+            // Update form action
+            document.getElementById('editUserForm').action = `/accounts/users/${button.dataset.userId}/update/`;
+        });
+        
+        // Handle Delete Modal
+        const deleteModal = document.getElementById('deleteUserModal');
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            
+            document.getElementById('delete_user_name').textContent = button.dataset.userName;
+            document.getElementById('deleteUserForm').action = button.dataset.userUrl;
+        });
+    });
+</script>
+{% endblock %}

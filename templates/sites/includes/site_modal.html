@@ -1,0 +1,16 @@
+<div class="modal-header">
+    <h5 class="modal-title">{% if action == 'Create' %}<i class="bi bi-plus-circle me-2"></i>Create{% else %}<i class="bi bi-pencil me-2"></i>Edit{% endif %} Site</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<form id="siteForm" action="{% if action == 'Create' %}{% url 'sites:site_create_modal' %}{% else %}{% url 'sites:site_update_modal' site.pk %}{% endif %}" method="post">
+    {% csrf_token %}
+    <div class="modal-body">
+        {% include 'sites/includes/site_form_content.html' %}
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitSiteForm('siteForm', '{% if action == 'Create' %}create{% else %}edit{% endif %}', {% if site %}{{ site.pk }}{% else %}0{% endif %})">
+            {% if action == 'Create' %}<i class="bi bi-plus-circle me-1"></i> Create{% else %}<i class="bi bi-check-circle me-1"></i> Update{% endif %}
+        </button>
+    </div>
+</form>

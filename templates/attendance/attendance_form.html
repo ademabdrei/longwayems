@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-calendar-check me-2"></i>{{ page_title }}
+        </h2>
+        <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        {% if action == 'Create' %}
+                            <i class="bi bi-plus-lg me-2"></i>Mark Attendance
+                        {% else %}
+                            <i class="bi bi-pencil me-2"></i>Edit Attendance
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.employee.id_for_label }}" class="form-label">
+                                Employee <span class="text-danger">*</span>
+                            </label>
+                            {{ form.employee }}
+                            {% if form.employee.errors %}
+                                <div class="text-danger small mt-1">{{ form.employee.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">Project</label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                                <div class="text-danger small mt-1">{{ form.project.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.date.id_for_label }}" class="form-label">
+                                Date <span class="text-danger">*</span>
+                            </label>
+                            {{ form.date }}
+                            {% if form.date.errors %}
+                                <div class="text-danger small mt-1">{{ form.date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                Status <span class="text-danger">*</span>
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.overtime_hours.id_for_label }}" class="form-label">Overtime Hours</label>
+                            {{ form.overtime_hours }}
+                            {% if form.overtime_hours.errors %}
+                                <div class="text-danger small mt-1">{{ form.overtime_hours.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">Enter overtime hours if applicable</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>
+                                {% if action == 'Create' %}Mark Attendance{% else %}Update Attendance{% endif %}
+                            </button>
+                            <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Fill in the attendance details. Fields marked with 
+                        <span class="text-danger">*</span> are required.
+                    </p>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Select the employee to mark attendance for
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Project assignment is optional
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Status options: Present, Night, Double, Half, Absent, On Leave
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            Overtime is calculated at 1.5x hourly rate
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

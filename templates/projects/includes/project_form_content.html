@@ -1,0 +1,72 @@
+<!-- Project Form Content (for validation errors) -->
+<div class="row g-3">
+    <div class="col-12">
+        <h6 class="border-bottom pb-2 mb-3 text-primary">
+            <i class="bi bi-briefcase me-2"></i>Project Details
+        </h6>
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label">Project Name <span class="text-danger">*</span></label>
+        {{ form.project_name }}
+        {% if form.project_name.errors %}
+            <div class="text-danger small mt-1">{{ form.project_name.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Site</label>
+        {{ form.site }}
+        {% if form.site.errors %}
+            <div class="text-danger small mt-1">{{ form.site.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Emirate</label>
+        {{ form.emirate }}
+        {% if form.emirate.errors %}
+            <div class="text-danger small mt-1">{{ form.emirate.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-12">
+        <label class="form-label">Location</label>
+        {{ form.location }}
+        {% if form.location.errors %}
+            <div class="text-danger small mt-1">{{ form.location.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Start Date</label>
+        {{ form.start_date }}
+        {% if form.start_date.errors %}
+            <div class="text-danger small mt-1">{{ form.start_date.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">End Date</label>
+        {{ form.end_date }}
+        {% if form.end_date.errors %}
+            <div class="text-danger small mt-1">{{ form.end_date.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Project Manager</label>
+        {{ form.manager }}
+        {% if form.manager.errors %}
+            <div class="text-danger small mt-1">{{ form.manager.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Status</label>
+        {{ form.status }}
+        {% if form.status.errors %}
+            <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+        {% endif %}
+    </div>
+</div>

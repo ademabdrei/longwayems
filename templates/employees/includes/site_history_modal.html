@@ -1,0 +1,211 @@
+<div class="modal fade" id="siteHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content site-history-modal-shell">
+            <div class="modal-header site-history-modal-header">
+                <div>
+                    <div class="site-history-eyebrow">Site Assignment History</div>
+                    <h5 class="modal-title mb-1">{{ employee.full_name }}</h5>
+                    <div class="text-muted small">{{ employee.position }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body site-history-modal-body">
+                {% if current_assignment %}
+                <div class="site-history-section site-history-current">
+                    <div class="section-title">Current Site</div>
+                    <div class="site-card site-card-current">
+                        <div class="site-name">{{ current_assignment.site.site_name }}</div>
+                        <div class="site-meta">{{ current_assignment.start_date|date:"M d, Y" }} to Present</div>
+                        <span class="site-status site-status-active">{{ current_assignment.status }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="site-history-section">
+                    <div class="section-title">All Site Assignments</div>
+                    {% if site_history %}
+                    <div class="site-history-list">
+                        {% for assignment in site_history %}
+                        <div class="site-history-item {% if assignment.status == 'Active' %}site-history-active{% endif %}">
+                            <div class="site-history-info">
+                                <div class="site-history-site">{{ assignment.site.site_name }}</div>
+                                <div class="site-history-dates">
+                                    {{ assignment.start_date|date:"M d, Y" }} to
+                                    {% if assignment.end_date %}{{ assignment.end_date|date:"M d, Y" }}{% else %}Present{% endif %}
+                                </div>
+                                {% if assignment.notes %}
+                                <div class="site-history-notes">{{ assignment.notes }}</div>
+                                {% endif %}
+                            </div>
+                            <span class="site-status site-status-{% if assignment.status == 'Active' %}active{% elif assignment.status == 'Completed' %}completed{% elif assignment.status == 'On Hold' %}hold{% else %}terminated{% endif %}">
+                                {{ assignment.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="site-history-empty">No site assignment history for this employee.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #siteHistoryModal .modal-content.site-history-modal-shell {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+        overflow: hidden;
+    }
+
+    #siteHistoryModal .site-history-modal-header {
+        padding: 1rem 1.25rem 0.85rem;
+        border-bottom: 1px solid #edf0f3;
+        background: #ffffff;
+    }
+
+    #siteHistoryModal .site-history-eyebrow {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 0.35rem;
+    }
+
+    #siteHistoryModal .site-history-modal-body {
+        background: #f7f8fa;
+        padding: 1rem 1.25rem;
+    }
+
+    #siteHistoryModal .site-history-section {
+        margin-bottom: 1.25rem;
+    }
+
+    #siteHistoryModal .site-history-section + .site-history-section {
+        padding-top: 1.25rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    #siteHistoryModal .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 0.7rem;
+    }
+
+    #siteHistoryModal .site-card {
+        border: 1px solid #e8edf3;
+        border-radius: 14px;
+        padding: 0.85rem;
+        background: #ffffff;
+    }
+
+    #siteHistoryModal .site-card-current {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
+    #siteHistoryModal .site-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.25rem;
+    }
+
+    #siteHistoryModal .site-meta {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    #siteHistoryModal .site-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    #siteHistoryModal .site-status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    #siteHistoryModal .site-status-completed {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    #siteHistoryModal .site-status-hold {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    #siteHistoryModal .site-status-terminated {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    #siteHistoryModal .site-history-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    #siteHistoryModal .site-history-item {
+        border: 1px solid #e8edf3;
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        background: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    #siteHistoryModal .site-history-active {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
+    #siteHistoryModal .site-history-info {
+        flex: 1;
+    }
+
+    #siteHistoryModal .site-history-site {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.2rem;
+    }
+
+    #siteHistoryModal .site-history-dates {
+        font-size: 0.88rem;
+        color: #64748b;
+    }
+
+    #siteHistoryModal .site-history-notes {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #475569;
+        font-style: italic;
+    }
+
+    #siteHistoryModal .site-history-empty {
+        color: #64748b;
+        font-size: 0.92rem;
+        text-align: center;
+        padding: 2rem 0;
+    }
+
+    @media (max-width: 767.98px) {
+        #siteHistoryModal .site-history-modal-body {
+            padding: 1rem;
+        }
+    }
+</style>

@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Welcome back, {{ user.first_name }}!</h2>
+            <p class="text-muted mb-0">Here's what's happening with your EMS today.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row 1 -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-semibold">Total Employees</p>
+                            <h3 class="mb-0 fw-bold">{{ total_employees|default:0 }}</h3>
+                            <small class="text-success"><i class="bi bi-check-circle me-1"></i>{{ active_employees|default:0 }} active</small>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2">
+                            <i class="bi bi-people text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-semibold">Active Sites</p>
+                            <h3 class="mb-0 fw-bold">{{ active_sites|default:0 }}</h3>
+                            <small class="text-muted">{{ total_sites|default:0 }} total</small>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-2">
+                            <i class="bi bi-geo-alt text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-semibold">Active Projects</p>
+                            <h3 class="mb-0 fw-bold">{{ active_projects|default:0 }}</h3>
+                            <small class="text-muted">{{ total_projects|default:0 }} total</small>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-2">
+                            <i class="bi bi-briefcase text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-semibold">Assigned</p>
+                            <h3 class="mb-0 fw-bold">{{ assigned_employees|default:0 }}</h3>
+                            <small class="text-muted">to active projects</small>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-3 p-2">
+                            <i class="bi bi-person-check text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase fw-semibold">Unassigned</p>
+                            <h3 class="mb-0 fw-bold">{{ unassigned_employees|default:0 }}</h3>
+                            <small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>needs assignment</small>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-2">
+                            <i class="bi bi-person-dash text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <h6 class="text-muted text-uppercase small fw-semibold mb-3">Quick Actions</h6>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm h-100 quick-action-card" onclick="openQuickEmployeeModal()" style="cursor:pointer;">
+                <div class="card-body text-center py-4">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-person-plus text-primary fs-3"></i>
+                    </div>
+                    <h6 class="mb-1 fw-bold">Add Employee</h6>
+                    <p class="text-muted small mb-0">Create new employee record</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm h-100 quick-action-card" onclick="openQuickProjectModal()" style="cursor:pointer;">
+                <div class="card-body text-center py-4">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-plus-circle text-success fs-3"></i>
+                    </div>
+                    <h6 class="mb-1 fw-bold">New Project</h6>
+                    <p class="text-muted small mb-0">Create a new project</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm h-100 quick-action-card" onclick="openQuickAssignModal()" style="cursor:pointer;">
+                <div class="card-body text-center py-4">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-link-45deg text-info fs-3"></i>
+                    </div>
+                    <h6 class="mb-1 fw-bold">Assign Employee</h6>
+                    <p class="text-muted small mb-0">Assign to a project</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm h-100 quick-action-card" onclick="openQuickUserModal()" style="cursor:pointer;">
+                <div class="card-body text-center py-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                        <i class="bi bi-person-gear text-warning fs-3"></i>
+                    </div>
+                    <h6 class="mb-1 fw-bold">Add User</h6>
+                    <p class="text-muted small mb-0">Create system user account</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column: Recent Employees & Recent Projects -->
+    <div class="row g-3 mb-4">
+        <!-- Recent Employees -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-person-plus me-2 text-primary"></i>Recently Added Employees</h6>
+                    <a href="{% url 'employees:employee_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_employees %}
+                    <div class="list-group list-group-flush">
+                        {% for emp in recent_employees %}
+                        <div class="list-group-item d-flex align-items-center py-3">
+                            {% if emp.profile_picture %}
+                            <img src="{{ emp.profile_picture.url }}" class="rounded-circle me-3" width="40" height="40">
+                            {% else %}
+                            <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:40px;height:40px;font-size:0.8rem;">
+                                {{ emp.first_name|first|upper }}{{ emp.last_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <a href="{% url 'employees:employee_detail' emp.pk %}" class="text-decoration-none fw-semibold">{{ emp.full_name }}</a>
+                                <div class="text-muted small">{{ emp.position }}</div>
+                            </div>
+                            <span class="badge bg-{% if emp.status == 'Active' %}success{% else %}secondary{% endif %}">{{ emp.status }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people text-muted fs-1"></i>
+                        <p class="text-muted mt-2 mb-0">No employees yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-briefcase me-2 text-success"></i>Recent Projects</h6>
+                    <a href="{% url 'projects:project_list' %}" class="btn btn-sm btn-outline-success">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_projects %}
+                    <div class="list-group list-group-flush">
+                        {% for proj in recent_projects %}
+                        <div class="list-group-item d-flex align-items-center py-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                <i class="bi bi-briefcase text-success"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <button onclick="openDetailProjectModal({{ proj.pk }})" class="btn btn-link p-0 border-0 bg-transparent text-decoration-none fw-semibold">{{ proj.project_name }}</button>
+                                <div class="text-muted small">{{ proj.emirate|default:'No location' }}</div>
+                            </div>
+                            <span class="badge bg-{% if proj.status == 'Active' %}success{% elif proj.status == 'Completed' %}warning{% elif proj.status == 'On Hold' %}info{% else %}secondary{% endif %}">{{ proj.status }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-briefcase text-muted fs-1"></i>
+                        <p class="text-muted mt-2 mb-0">No projects yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Assignments -->
+    {% if active_project_assignments %}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-link-45deg me-2 text-info"></i>Latest Assignments</h6>
+                    <a href="{% url 'employees:employee_list' %}" class="btn btn-sm btn-outline-info">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Project</th>
+                                    <th>Start Date</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in active_project_assignments %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if a.employee.profile_picture %}
+                                            <img src="{{ a.employee.profile_picture.url }}" class="rounded-circle me-2" width="32" height="32">
+                                            {% else %}
+                                            <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:32px;height:32px;font-size:0.7rem;">
+                                                {{ a.employee.first_name|first|upper }}{{ a.employee.last_name|first|upper }}
+                                            </div>
+                                            {% endif %}
+                                            <span class="fw-medium">{{ a.employee.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-primary-subtle text-primary">{{ a.project.project_name }}</span></td>
+                                    <td>{{ a.start_date|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-success">{{ a.status }}</span></td>
+                                    <td class="text-muted small">{{ a.notes|default:'-'|truncatechars:40 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Containers -->
+<div id="quickEmployeeModalContainer"></div>
+<div id="quickProjectModalContainer"></div>
+<div id="quickAssignModalContainer"></div>
+<div id="quickUserModalContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+// ===== Employee Modal =====
+function openQuickEmployeeModal() {
+    fetch('{% url "employees:employee_create_modal" %}', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) return;
+        document.getElementById('quickEmployeeModalContainer').innerHTML = data.html;
+        const modal = new bootstrap.Modal(document.getElementById('employeeModal'));
+        modal.show();
+        const form = document.getElementById('employeeModal').querySelector('form');
+        if (form) form.addEventListener('submit', e => { e.preventDefault(); submitEmployeeModal(form); });
+    });
+}
+
+function submitEmployeeModal(form) {
+    fetch('{% url "employees:employee_create_modal" %}', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(async r => ({ ok: r.ok, data: await r.json() }))
+    .then(({ ok, data }) => {
+        if (ok && data.success) { window.location.reload(); return; }
+        if (data.form_html) {
+            document.querySelector('#employeeModal .modal-body .row.g-3').outerHTML = data.form_html;
+            const f = document.querySelector('#employeeModal form');
+            f.addEventListener('submit', e => { e.preventDefault(); submitEmployeeModal(f); }, { once: true });
+        }
+    });
+}
+
+// ===== Project Modal =====
+function openQuickProjectModal() {
+    fetch('{% url "projects:project_create_modal" %}', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) return;
+        document.getElementById('quickProjectModalContainer').innerHTML = data.html;
+        const modal = new bootstrap.Modal(document.getElementById('projectModal'));
+        modal.show();
+        const form = document.getElementById('projectModal').querySelector('form');
+        if (form) form.addEventListener('submit', e => { e.preventDefault(); submitProjectModal(form); });
+    });
+}
+
+function submitProjectModal(form) {
+    fetch('{% url "projects:project_create_modal" %}', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(async r => ({ ok: r.ok, data: await r.json() }))
+    .then(({ ok, data }) => {
+        if (ok && data.success) { window.location.reload(); return; }
+        if (data.form_html) {
+            document.querySelector('#projectModal .modal-body .row.g-3').outerHTML = data.form_html;
+            const f = document.querySelector('#projectModal form');
+            f.addEventListener('submit', e => { e.preventDefault(); submitProjectModal(f); }, { once: true });
+        }
+    });
+}
+
+// ===== Project Detail Modal =====
+function openDetailProjectModal(pk) {
+    fetch(`{% url "projects:project_detail_modal" 0 %}`.replace('0', pk), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) return;
+        document.getElementById('quickProjectModalContainer').innerHTML = data.html;
+        new bootstrap.Modal(document.getElementById('projectDetailModal')).show();
+    });
+}
+
+// ===== Assign Employee Modal =====
+function openQuickAssignModal() {
+    // Redirect to employee list with unassigned filter for now
+    window.location.href = '{% url "employees:employee_list_unassigned" %}';
+}
+
+// ===== User Modal =====
+function openQuickUserModal() {
+    // Redirect to user create for now
+    window.location.href = '{% url "accounts:user_create" %}';
+}
+</script>
+
+<style>
+.quick-action-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.quick-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.quick-action-card:hover .rounded-circle {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+.quick-action-card .rounded-circle {
+    transition: transform 0.2s ease;
+}
+</style>
+{% endblock %}

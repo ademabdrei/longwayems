@@ -1,0 +1,94 @@
+{% if assignment_history %}
+<div class="history-list">
+    {% for assignment in assignment_history %}
+    <div class="history-item">
+        <div class="history-main">
+            <div class="history-project">{{ assignment.project.project_name }}</div>
+            <div class="history-dates">
+                {{ assignment.start_date|date:"M d, Y" }} to
+                {% if assignment.end_date %}{{ assignment.end_date|date:"M d, Y" }}{% else %}Present{% endif %}
+            </div>
+        </div>
+        <div class="history-meta">
+            <span class="history-badge history-badge-{% if assignment.status == 'Active' %}active{% elif assignment.status == 'Completed' %}completed{% elif assignment.status == 'On Hold' %}hold{% else %}terminated{% endif %}">
+                {{ assignment.status }}
+            </span>
+            {% if assignment.notes %}
+            <div class="history-notes">{{ assignment.notes }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="history-empty">No assignment history.</div>
+{% endif %}
+
+<style>
+    #assignmentModal .history-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    #assignmentModal .history-item {
+        border: 1px solid #e8edf3;
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        background: #fcfcfd;
+    }
+
+    #assignmentModal .history-project {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.2rem;
+    }
+
+    #assignmentModal .history-dates {
+        font-size: 0.88rem;
+        color: #64748b;
+    }
+
+    #assignmentModal .history-meta {
+        margin-top: 0.65rem;
+    }
+
+    #assignmentModal .history-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.28rem 0.68rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    #assignmentModal .history-badge-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    #assignmentModal .history-badge-completed {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    #assignmentModal .history-badge-hold {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    #assignmentModal .history-badge-terminated {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    #assignmentModal .history-notes {
+        margin-top: 0.55rem;
+        font-size: 0.88rem;
+        color: #475569;
+    }
+
+    #assignmentModal .history-empty {
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+</style>
