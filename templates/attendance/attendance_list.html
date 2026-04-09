@@ -2,465 +2,993 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
             <i class="bi bi-calendar-check me-2"></i>{{ page_title }}
         </h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'attendance:bulk_attendance' %}" class="btn btn-outline-primary">
-                <i class="bi bi-people-fill me-1"></i>Bulk Mark
-            </a>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAttendanceModal">
-                <i class="bi bi-plus-lg me-1"></i>Mark Attendance
-            </button>
-        </div>
+        <button type="button" class="btn btn-primary" onclick="openCreateAttendanceModal()">
+            <i class="bi bi-plus-lg me-1"></i>Mark Attendance
+        </button>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card stats-card bg-gradient-primary">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0 opacity-75">Today's Total</h6>
-                        <h3 class="mb-0 mt-2">{{ total_today }}</h3>
-                    </div>
-                    <i class="bi bi-calendar-check display-6 opacity-50"></i>
+    <div class="row g-4">
+        <!-- Sidebar: Sites -->
+        <div class="col-md-3 col-lg-3">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Sites</h5>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card bg-gradient-success">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0 opacity-75">Present</h6>
-                        <h3 class="mb-0 mt-2">{{ present_today }}</h3>
-                    </div>
-                    <i class="bi bi-check-circle display-6 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card bg-gradient-danger">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0 opacity-75">Absent</h6>
-                        <h3 class="mb-0 mt-2">{{ absent_today }}</h3>
-                    </div>
-                    <i class="bi bi-x-circle display-6 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stats-card bg-gradient-warning">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0 opacity-75">Unmarked</h6>
-                        <h3 class="mb-0 mt-2">{{ unmarked_today }}</h3>
-                    </div>
-                    <i class="bi bi-question-circle display-6 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label">Search</label>
-                    <input type="text" name="search" class="form-control" 
-                           placeholder="Employee name..." 
-                           value="{{ current_search }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Date</label>
-                    <input type="date" name="date" class="form-control" value="{{ current_date }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="">All Status</option>
-                        {% for value, label in status_choices %}
-                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Employee</label>
-                    <select name="employee" class="form-select">
-                        <option value="">All Employees</option>
-                        {% for emp in employees %}
-                        <option value="{{ emp.id }}" {% if current_employee == emp.id|stringformat:"s" %}selected{% endif %}>
-                            {{ emp.full_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Project</label>
-                    <select name="project" class="form-select">
-                        <option value="">All Projects</option>
-                        {% for proj in projects %}
-                        <option value="{{ proj.id }}" {% if current_project == proj.id|stringformat:"s" %}selected{% endif %}>
-                            {{ proj.project_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary flex-fill">
-                        <i class="bi bi-search me-1"></i>Filter
-                    </button>
-                    <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-lg"></i>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'attendance:attendance_list' %}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if not selected_site %}active{% endif %}">
+                        <span><i class="bi bi-grid me-2"></i>All Sites</span>
+                        <span class="badge {% if not selected_site %}bg-light text-dark{% else %}bg-primary{% endif %}">{{ all_employees_count }}</span>
                     </a>
+                    {% for site in sites %}
+                    <a href="?site={{ site.pk }}&date={{ selected_date|date:'Y-m-d' }}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if selected_site and selected_site.pk == site.pk %}active{% endif %}">
+                        <span class="text-truncate me-2">
+                            <i class="bi bi-buildings me-2"></i>{{ site.site_name }}
+                        </span>
+                        <span class="badge {% if selected_site and selected_site.pk == site.pk %}bg-light text-dark{% else %}bg-primary{% endif %}">
+                            {{ site.employee_count }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-muted">No sites available</div>
+                    {% endfor %}
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Attendance Table -->
-    <div class="card">
-        <div class="card-body">
-            {% if attendances %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Employee</th>
-                            <th>Project</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Overtime</th>
-                            <th>Notes</th>
-                            <th>Marked By</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for attendance in attendances %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if attendance.employee.profile_picture %}
-                                        <img src="{{ attendance.employee.profile_picture.url }}" 
-                                             alt="{{ attendance.employee.full_name }}"
-                                             class="rounded-circle me-2" width="36" height="36">
-                                    {% else %}
-                                        <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" 
-                                             style="width: 36px; height: 36px;">
-                                            {{ attendance.employee.first_name|first|upper }}
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-9">
+            <!-- Statistics Cards -->
+            <div class="row g-2 mb-4">
+                <div class="col">
+                    <div class="card stats-card bg-gradient-primary">
+                        <div class="text-center py-3">
+                            <i class="bi bi-people-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ total_employees }}</h3>
+                            <small class="opacity-75">Total</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card stats-card bg-gradient-success">
+                        <div class="text-center py-3">
+                            <i class="bi bi-check-circle-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ present_count }}</h3>
+                            <small class="opacity-75">Present</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card stats-card bg-gradient-danger">
+                        <div class="text-center py-3">
+                            <i class="bi bi-x-circle-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ absent_count }}</h3>
+                            <small class="opacity-75">Absent</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card stats-card bg-gradient-info">
+                        <div class="text-center py-3">
+                            <i class="bi bi-moon-stars-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ night_count }}</h3>
+                            <small class="opacity-75">Night</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card stats-card" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);">
+                        <div class="text-center py-3">
+                            <i class="bi bi-sun-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ double_count }}</h3>
+                            <small class="opacity-75">Double</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card stats-card bg-gradient-warning">
+                        <div class="text-center py-3">
+                            <i class="bi bi-question-circle-fill display-6 opacity-50"></i>
+                            <h3 class="mb-0 mt-1">{{ unmarked_count }}</h3>
+                            <small class="opacity-75">Unmarked</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Attendance Table -->
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people me-2"></i>
+                            Employee Attendance
+                            {% if selected_site %}
+                            - {{ selected_site.site_name }}
+                            {% endif %}
+                        </h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="button"
+                                    class="btn btn-success"
+                                    id="saveAllChangesBtn"
+                                    onclick="saveAllChanges()"
+                                    style="display: none;">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Save All Changes (<span id="changesCount">0</span>)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bulk Update Inline Controls -->
+                <div id="bulkUpdateBar" class="px-3 py-2 bg-light border-bottom" style="display: none;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-primary">
+                            <i class="bi bi-check2-square me-1"></i><span id="bulkSelectedCount">0</span>
+                        </span>
+                        <select class="form-select form-select-sm" id="bulkStatusSelect" style="width: 140px;">
+                            <option value="">Status</option>
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Night">Night</option>
+                            <option value="Double">Double</option>
+                            <option value="Half">Half</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Unmarked">Unmarked</option>
+                        </select>
+                        <input type="number" class="form-control form-control-sm" id="bulkOvertimeInput" 
+                               step="0.5" min="0" value="" placeholder="OT hrs" style="width: 90px;">
+                        <input type="text" class="form-control form-control-sm" id="bulkNotesInput" 
+                               placeholder="Notes..." style="width: 180px;">
+                        <button type="button" class="btn btn-sm btn-primary" id="bulkApplyBtn" onclick="applyBulkUpdate()">
+                            <i class="bi bi-check-lg me-1"></i>Apply
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if employees_with_attendance %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" 
+                                               class="form-check-input" 
+                                               id="selectAllCheckbox"
+                                               onchange="toggleSelectAll(this.checked)">
+                                    </th>
+                                    <th>Employee</th>
+                                    <th>Position</th>
+                                    <th>Project</th>
+                                    <th>Mark Attendance</th>
+                                    <th>Overtime</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in employees_with_attendance %}
+                                <tr class="{% if not item.has_attendance %}table-light{% endif %}" id="employee-row-{{ item.employee.pk }}">
+                                    <td>
+                                        <input type="checkbox" 
+                                               class="form-check-input employee-checkbox" 
+                                               id="checkbox-{{ item.employee.pk }}"
+                                               data-employee-id="{{ item.employee.pk }}"
+                                               onchange="updateSelectedCount()">
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.employee.profile_picture %}
+                                            <img src="{{ item.employee.profile_picture.url }}"
+                                                 alt="{{ item.employee.full_name }}"
+                                                 class="rounded-circle me-2" width="40" height="40">
+                                            {% else %}
+                                            <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                 style="width: 40px; height: 40px;">
+                                                {{ item.employee.first_name|first|upper }}{{ item.employee.last_name|first|upper }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-semibold">{{ item.employee.full_name }}</div>
+                                                <small class="text-muted">{{ item.employee.email|default:'' }}</small>
+                                            </div>
                                         </div>
-                                    {% endif %}
-                                    <div>
-                                        <div class="fw-semibold">{{ attendance.employee.full_name }}</div>
-                                        <small class="text-muted">{{ attendance.employee.position|default:'' }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                {% if attendance.project %}
-                                    <span class="text-primary">{{ attendance.project.project_name }}</span>
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ attendance.date|date:"M d, Y" }}</td>
-                            <td>
-                                {% if attendance.status == 'Present' %}
-                                    <span class="badge bg-success">{{ attendance.status }}</span>
-                                {% elif attendance.status == 'Absent' %}
-                                    <span class="badge bg-danger">{{ attendance.status }}</span>
-                                {% elif attendance.status == 'Night' %}
-                                    <span class="badge bg-info">{{ attendance.status }}</span>
-                                {% elif attendance.status == 'Double' %}
-                                    <span class="badge bg-warning">{{ attendance.status }}</span>
-                                {% elif attendance.status == 'Half' %}
-                                    <span class="badge bg-secondary">{{ attendance.status }}</span>
-                                {% elif attendance.status == 'On Leave' %}
-                                    <span class="badge bg-primary">{{ attendance.status }}</span>
-                                {% else %}
-                                    <span class="badge bg-light text-dark">{{ attendance.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if attendance.overtime_hours > 0 %}
-                                    <span class="badge bg-info">{{ attendance.overtime_hours }} hrs</span>
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if attendance.notes %}
-                                    <button type="button" class="btn btn-sm btn-link" 
-                                            data-bs-toggle="tooltip" title="{{ attendance.notes }}">
-                                        <i class="bi bi-chat-left-text"></i>
-                                    </button>
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if attendance.created_by %}
-                                    {{ attendance.created_by.get_full_name }}
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-warning" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editAttendanceModal"
-                                            data-attendance-id="{{ attendance.pk }}"
-                                            data-attendance-employee="{{ attendance.employee_id }}"
-                                            data-attendance-project="{{ attendance.project_id|default:'' }}"
-                                            data-attendance-date="{{ attendance.date|date:'Y-m-d' }}"
-                                            data-attendance-status="{{ attendance.status }}"
-                                            data-attendance-overtime="{{ attendance.overtime_hours }}"
-                                            data-attendance-notes="{{ attendance.notes|default:'' }}"
-                                            title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteAttendanceModal"
-                                            data-attendance-id="{{ attendance.pk }}"
-                                            data-attendance-name="{{ attendance.employee.full_name }}"
-                                            data-attendance-date="{{ attendance.date|date:'M d, Y' }}"
-                                            data-attendance-url="{% url 'attendance:attendance_delete' attendance.pk %}"
-                                            title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td>{{ item.employee.position }}</td>
+                                    <td>
+                                        {% if item.has_attendance and item.attendance.project %}
+                                        <span class="badge bg-info-subtle text-info" id="project-badge-{{ item.employee.pk }}">
+                                            {{ item.attendance.project.project_name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm attendance-status-select" 
+                                                id="attendance-select-{{ item.employee.pk }}"
+                                                onchange="onAttendanceChange({{ item.employee.pk }})"
+                                                data-original-value="{{ item.attendance.status|default:'Unmarked' }}"
+                                                style="min-width: 150px;">
+                                            <option value="">Select Status</option>
+                                            <option value="Present" {% if item.has_attendance and item.attendance.status == 'Present' %}selected{% endif %}>Present</option>
+                                            <option value="Absent" {% if item.has_attendance and item.attendance.status == 'Absent' %}selected{% endif %}>Absent</option>
+                                            <option value="Night" {% if item.has_attendance and item.attendance.status == 'Night' %}selected{% endif %}>Night</option>
+                                            <option value="Double" {% if item.has_attendance and item.attendance.status == 'Double' %}selected{% endif %}>Double</option>
+                                            <option value="Half" {% if item.has_attendance and item.attendance.status == 'Half' %}selected{% endif %}>Half</option>
+                                            <option value="On Leave" {% if item.has_attendance and item.attendance.status == 'On Leave' %}selected{% endif %}>On Leave</option>
+                                            <option value="Unmarked" {% if not item.has_attendance or item.attendance.status == 'Unmarked' %}selected{% endif %}>Unmarked</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        {% if item.has_attendance and item.attendance.overtime_hours > 0 %}
+                                        <span class="badge bg-info" id="overtime-badge-{{ item.employee.pk }}">{{ item.attendance.overtime_hours }} hrs</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.has_attendance and item.attendance.notes %}
+                                        <small class="text-muted" id="notes-text-{{ item.employee.pk }}">{{ item.attendance.notes|truncatechars:30 }}</small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-people display-1 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No employees found</h5>
+                        <p class="text-muted mb-0">No employees match the selected site or filters.</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-calendar-x display-1 text-muted"></i>
-                <h5 class="mt-3 text-muted">No attendance records found</h5>
-                <p class="text-muted">Start by marking attendance for employees.</p>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAttendanceModal">
-                    <i class="bi bi-plus-lg me-1"></i>Mark Attendance
-                </button>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Create Attendance Modal -->
-<div class="modal fade" id="createAttendanceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'attendance:attendance_create' %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-calendar-check me-2"></i>Mark Attendance
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Employee <span class="text-danger">*</span></label>
-                        <select name="employee" class="form-select" required>
-                            <option value="">Select Employee</option>
-                            {% for emp in employees %}
-                            <option value="{{ emp.id }}">{{ emp.full_name }} - {{ emp.position }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Project</label>
-                        <select name="project" class="form-select">
-                            <option value="">No Project</option>
-                            {% for proj in projects %}
-                            <option value="{{ proj.id }}">{{ proj.project_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input type="date" name="date" class="form-control" required value="{% now 'Y-m-d' %}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select" required>
-                            {% for value, label in status_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Overtime Hours</label>
-                        <input type="number" name="overtime_hours" class="form-control" step="0.5" min="0" value="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg me-1"></i>Mark Attendance
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Modal Containers -->
+<div id="attendanceModalContainer"></div>
+<div id="attendanceDeleteModalContainer"></div>
 
-<!-- Edit Attendance Modal -->
-<div class="modal fade" id="editAttendanceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" id="editAttendanceForm">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-pencil me-2"></i>Edit Attendance
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="attendance_id" id="edit_attendance_id">
-                    <div class="mb-3">
-                        <label class="form-label">Employee <span class="text-danger">*</span></label>
-                        <select name="employee" id="edit_attendance_employee" class="form-select" required>
-                            {% for emp in employees %}
-                            <option value="{{ emp.id }}">{{ emp.full_name }} - {{ emp.position }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Project</label>
-                        <select name="project" id="edit_attendance_project" class="form-select">
-                            <option value="">No Project</option>
-                            {% for proj in projects %}
-                            <option value="{{ proj.id }}">{{ proj.project_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input type="date" name="date" id="edit_attendance_date" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" id="edit_attendance_status" class="form-select" required>
-                            {% for value, label in status_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Overtime Hours</label>
-                        <input type="number" name="overtime_hours" id="edit_attendance_overtime" class="form-control" step="0.5" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" id="edit_attendance_notes" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-check-lg me-1"></i>Update
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% endblock %}
 
-<!-- Delete Attendance Modal -->
-<div class="modal fade" id="deleteAttendanceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" id="deleteAttendanceForm">
-                {% csrf_token %}
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-calendar-x display-1 text-danger mb-3"></i>
-                    <h5>Delete this attendance record?</h5>
-                    <p class="text-muted mb-2">
-                        <strong id="delete_attendance_name"></strong>
-                    </p>
-                    <p class="text-muted mb-3" id="delete_attendance_date"></p>
-                    <div class="alert alert-warning" role="alert">
-                        <i class="bi bi-exclamation-circle me-2"></i>
-                        This action cannot be undone.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg me-1"></i>Cancel
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-check-lg me-1"></i>Yes, Delete
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% block extra_css %}
+<style>
+/* Bulk update bar styling */
+#bulkUpdateBar {
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease;
+}
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Toast notification styling */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Attendance dropdown styling */
+.attendance-status-select {
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+.attendance-status-select option[value="Present"] {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+.attendance-status-select option[value="Absent"] {
+    background-color: #f8d7da;
+    color: #842029;
+}
+.attendance-status-select option[value="Night"] {
+    background-color: #cff4fc;
+    color: #055160;
+}
+.attendance-status-select option[value="Double"] {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+.attendance-status-select option[value="Half"] {
+    background-color: #e2e3e5;
+    color: #41464b;
+}
+.attendance-status-select option[value="On Leave"] {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
+// Date picker auto-submit
+document.getElementById('datePicker')?.addEventListener('change', function() {
+    this.form.submit();
+});
 
-        // Handle Edit Modal
-        const editModal = document.getElementById('editAttendanceModal');
-        editModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('edit_attendance_id').value = button.dataset.attendanceId;
-            document.getElementById('edit_attendance_employee').value = button.dataset.attendanceEmployee;
-            document.getElementById('edit_attendance_project').value = button.dataset.attendanceProject || '';
-            document.getElementById('edit_attendance_date').value = button.dataset.attendanceDate;
-            document.getElementById('edit_attendance_status').value = button.dataset.attendanceStatus;
-            document.getElementById('edit_attendance_overtime').value = button.dataset.attendanceOvertime;
-            document.getElementById('edit_attendance_notes').value = button.dataset.attendanceNotes;
-            
-            document.getElementById('editAttendanceForm').action = `/attendance/${button.dataset.attendanceId}/update/`;
-        });
+// Initialize dropdowns with color on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[id^="attendance-select-"]').forEach(select => {
+        updateDropdownColor(select, select.value);
         
-        // Handle Delete Modal
-        const deleteModal = document.getElementById('deleteAttendanceModal');
-        deleteModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            
-            document.getElementById('delete_attendance_name').textContent = button.dataset.attendanceName;
-            document.getElementById('delete_attendance_date').textContent = button.dataset.attendanceDate;
-            document.getElementById('deleteAttendanceForm').action = button.dataset.attendanceUrl;
+        // Add change event listener for color updates
+        select.addEventListener('change', function() {
+            updateDropdownColor(this, this.value);
         });
     });
+});
+
+// Function to update dropdown color based on selected value
+function updateDropdownColor(selectElement, value) {
+    // Remove all status classes
+    selectElement.classList.remove('bg-success-subtle', 'bg-danger-subtle', 
+        'bg-info-subtle', 'bg-warning-subtle', 'bg-secondary-subtle', 'bg-primary-subtle');
+    
+    // Add appropriate class based on value
+    switch(value) {
+        case 'Present':
+            selectElement.classList.add('bg-success-subtle', 'text-success');
+            break;
+        case 'Absent':
+            selectElement.classList.add('bg-danger-subtle', 'text-danger');
+            break;
+        case 'Night':
+            selectElement.classList.add('bg-info-subtle', 'text-info');
+            break;
+        case 'Double':
+            selectElement.classList.add('bg-warning-subtle', 'text-warning');
+            break;
+        case 'Half':
+            selectElement.classList.add('bg-secondary-subtle', 'text-secondary');
+            break;
+        case 'On Leave':
+            selectElement.classList.add('bg-primary-subtle', 'text-primary');
+            break;
+        default:
+            // No special styling for empty or unmarked
+            break;
+    }
+}
+
+// Helper function to force page refresh with cache busting
+function forcePageRefresh() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('refresh', Date.now());
+    window.location.href = url.toString();
+}
+
+// Mark attendance function
+function markAttendance(employeeId, status) {
+    const date = '{{ selected_date|date:"Y-m-d" }}';
+    const siteId = '{{ selected_site.pk|default:"" }}';
+    const projectId = '{{ selected_project.pk|default:"" }}';
+
+    fetch('{% url "attendance:quick_mark_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `employee_id=${employeeId}&date=${date}&status=${status}${siteId ? '&site_id=' + siteId : ''}${projectId ? '&project_id=' + projectId : ''}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Get employee name from DOM
+            const row = document.getElementById(`employee-row-${employeeId}`);
+            const nameElement = row?.querySelector('.fw-semibold');
+            const employeeName = nameElement ? nameElement.textContent : `Employee #${employeeId}`;
+            
+            // Show detailed notification then refresh
+            showUpdateNotification(employeeName, status, 1);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to mark attendance'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while marking attendance');
+    });
+}
+
+// Update attendance status from dropdown
+function updateAttendanceStatus(employeeId, status) {
+    if (!status) {
+        return; // Don't do anything if "Select Status" is chosen
+    }
+    
+    const date = '{{ selected_date|date:"Y-m-d" }}';
+    const siteId = '{{ selected_site.pk|default:"" }}';
+    const projectId = '{{ selected_project.pk|default:"" }}';
+    
+    fetch('{% url "attendance:quick_mark_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `employee_id=${employeeId}&date=${date}&status=${status}${siteId ? '&site_id=' + siteId : ''}${projectId ? '&project_id=' + projectId : ''}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Get employee name from DOM
+            const row = document.getElementById(`employee-row-${employeeId}`);
+            const nameElement = row?.querySelector('.fw-semibold');
+            const employeeName = nameElement ? nameElement.textContent : `Employee #${employeeId}`;
+            
+            // Show detailed notification then refresh
+            showUpdateNotification(employeeName, status, 1);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to update attendance'));
+            // Reset the dropdown to previous value on error
+            forcePageRefresh();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating attendance');
+        forcePageRefresh();
+    });
+}
+
+// Track all changes
+let changedEmployees = {};
+
+// Called when dropdown value changes - tracks the change
+function onAttendanceChange(employeeId) {
+    const selectElement = document.getElementById(`attendance-select-${employeeId}`);
+    const originalValue = selectElement.getAttribute('data-original-value');
+    const currentValue = selectElement.value;
+    
+    // Track the change
+    if (currentValue !== originalValue && currentValue !== '') {
+        changedEmployees[employeeId] = {
+            employeeId: employeeId,
+            newStatus: currentValue,
+            originalStatus: originalValue
+        };
+    } else {
+        delete changedEmployees[employeeId];
+    }
+    
+    // Update the global save button
+    updateGlobalSaveButton();
+    
+    // Update dropdown color immediately for visual feedback
+    updateDropdownColor(selectElement, currentValue);
+}
+
+// Update the global save button visibility and count
+function updateGlobalSaveButton() {
+    const saveButton = document.getElementById('saveAllChangesBtn');
+    const countSpan = document.getElementById('changesCount');
+    const changeCount = Object.keys(changedEmployees).length;
+    
+    if (changeCount > 0) {
+        saveButton.style.display = 'inline-block';
+        countSpan.textContent = changeCount;
+    } else {
+        saveButton.style.display = 'none';
+    }
+}
+
+// Save all changes at once
+function saveAllChanges() {
+    const changeCount = Object.keys(changedEmployees).length;
+    
+    if (changeCount === 0) {
+        alert('No changes to save');
+        return;
+    }
+    
+    const saveButton = document.getElementById('saveAllChangesBtn');
+    const originalText = saveButton.innerHTML;
+    
+    // Show loading state
+    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Saving...';
+    saveButton.disabled = true;
+    
+    const date = '{{ selected_date|date:"Y-m-d" }}';
+    const siteId = '{{ selected_site.pk|default:"" }}';
+    const projectId = '{{ selected_project.pk|default:"" }}';
+    
+    // Save all changes in parallel
+    const promises = Object.values(changedEmployees).map(change => {
+        return fetch('{% url "attendance:quick_mark_attendance" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: `employee_id=${change.employeeId}&date=${date}&status=${change.newStatus}${siteId ? '&site_id=' + siteId : ''}${projectId ? '&project_id=' + projectId : ''}`
+        }).then(response => response.json());
+    });
+    
+    Promise.all(promises)
+        .then(results => {
+            // Check if all were successful
+            const allSuccess = results.every(data => data.success);
+
+            if (allSuccess) {
+                // Get employee names
+                const employeeNames = Object.values(changedEmployees).map(change => {
+                    const row = document.getElementById(`employee-row-${change.employeeId}`);
+                    const nameElement = row?.querySelector('.fw-semibold');
+                    return nameElement ? nameElement.textContent : `Employee #${change.employeeId}`;
+                });
+                
+                // Group by status
+                const statusCounts = {};
+                Object.values(changedEmployees).forEach(change => {
+                    statusCounts[change.newStatus] = (statusCounts[change.newStatus] || 0) + 1;
+                });
+                
+                // Show notification for first status (or "Multiple Statuses")
+                const firstStatus = Object.keys(statusCounts)[0];
+                const nameList = employeeNames.length === 1 ? employeeNames[0] : `${employeeNames.length} Employees`;
+                
+                // Show detailed notification then refresh
+                showUpdateNotification(nameList, firstStatus, changeCount);
+            } else {
+                // Some failed
+                const failures = results.filter(data => !data.success);
+                alert(`Error: ${failures.length} save(s) failed. Please try again.`);
+
+                // Reset button state
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving attendance');
+            // Always refresh to get fresh data
+            forcePageRefresh();
+        });
+}
+
+// Bulk Update Functions
+function toggleSelectAll(checked) {
+    document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.employee-checkbox:checked');
+    const selectedCount = selectedCheckboxes.length;
+    const countSpan = document.getElementById('selectedCount');
+    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
+    const bulkUpdateBar = document.getElementById('bulkUpdateBar');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    console.log('updateSelectedCount called - selected:', selectedCount);
+    
+    // Update counts
+    if (countSpan) countSpan.textContent = selectedCount;
+    if (bulkSelectedCount) bulkSelectedCount.textContent = selectedCount;
+    
+    // Show/hide bulk update bar
+    if (selectedCount > 0) {
+        if (bulkUpdateBar) {
+            bulkUpdateBar.style.display = 'block';
+            console.log('Bulk update bar shown');
+        } else {
+            console.error('bulkUpdateBar element not found!');
+        }
+    } else {
+        if (bulkUpdateBar) {
+            bulkUpdateBar.style.display = 'none';
+            console.log('Bulk update bar hidden');
+        }
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.employee-checkbox');
+    console.log('Total checkboxes found:', allCheckboxes.length);
+    const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+    selectAllCheckbox.checked = allChecked && allCheckboxes.length > 0;
+}
+
+function clearSelection() {
+    document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.getElementById('selectAllCheckbox').checked = false;
+    updateSelectedCount();
+}
+
+function applyBulkUpdate() {
+    const status = document.getElementById('bulkStatusSelect').value;
+    const overtimeHours = document.getElementById('bulkOvertimeInput').value;
+    const notes = document.getElementById('bulkNotesInput').value;
+    
+    console.log('=== BULK UPDATE START ===');
+    console.log('Status:', status, 'Overtime:', overtimeHours, 'Notes:', notes);
+    
+    const selectedCheckboxes = document.querySelectorAll('.employee-checkbox:checked');
+    const employeeIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-employee-id'));
+    
+    console.log('Selected checkboxes count:', selectedCheckboxes.length);
+    console.log('Employee IDs to update:', employeeIds);
+    
+    if (employeeIds.length === 0) {
+        alert('No employees selected');
+        return;
+    }
+    
+    const applyButton = document.getElementById('bulkApplyBtn');
+    const originalText = applyButton.innerHTML;
+    
+    // Show loading state
+    applyButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Applying...';
+    applyButton.disabled = true;
+    
+    const date = '{{ selected_date|date:"Y-m-d" }}';
+    const siteId = '{{ selected_site.pk|default:"" }}';
+    const projectId = '{{ selected_project.pk|default:"" }}';
+    
+    console.log('Date:', date, 'Site:', siteId, 'Project:', projectId);
+    
+    // Build request body - send all employee IDs in a single request
+    const requestBody = new URLSearchParams();
+    employeeIds.forEach(id => {
+        requestBody.append('employee_ids[]', id);
+    });
+    requestBody.append('date', date);
+    if (status) requestBody.append('status', status);
+    if (overtimeHours && overtimeHours !== '') requestBody.append('overtime_hours', overtimeHours);
+    if (notes && notes !== '') requestBody.append('notes', notes);
+    if (siteId) requestBody.append('site_id', siteId);
+    if (projectId) requestBody.append('project_id', projectId);
+    
+    console.log('Sending single bulk update request for', employeeIds.length, 'employees');
+    
+    // Send ONE request for all employees
+    fetch('{% url "attendance:bulk_update_attendance" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: requestBody.toString()
+    })
+    .then(async (response) => {
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            // Get employee names for selected
+            const employeeNames = Array.from(selectedCheckboxes).map(cb => {
+                const employeeId = cb.getAttribute('data-employee-id');
+                const row = document.getElementById(`employee-row-${employeeId}`);
+                const nameElement = row?.querySelector('.fw-semibold');
+                return nameElement ? nameElement.textContent : `Employee #${employeeId}`;
+            });
+            
+            const nameList = employeeNames.length === 1 ? employeeNames[0] : `${employeeNames.length} Employees`;
+            const displayStatus = status || 'Overtime/Notes';
+            
+            // Show detailed notification then refresh
+            showUpdateNotification(nameList, displayStatus, employeeIds.length);
+        } else {
+            // Failed
+            console.error('Bulk update failed:', data);
+            const errorMsg = data.message || `Error: ${data.errors ? data.errors.length : 0} update(s) failed`;
+            alert(errorMsg);
+            
+            // Reset button state
+            applyButton.innerHTML = originalText;
+            applyButton.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Bulk update error:', error);
+        alert('An error occurred while updating attendance');
+        // Always refresh to get fresh data
+        forcePageRefresh();
+    });
+}
+
+function showToast(message, type = 'info', duration = 3000) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.style.background = type === 'success' ? '#198754' : type === 'error' ? '#dc3545' : '#0dcaf0';
+    toast.style.color = 'white';
+    toast.style.padding = '16px 20px';
+    toast.style.fontSize = '14px';
+    toast.style.lineHeight = '1.5';
+    toast.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+    document.body.appendChild(toast);
+
+    // Remove after duration
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+// Show detailed update notification
+function showUpdateNotification(employeeNames, status, count, refreshCallback) {
+    // Get icon based on status
+    const statusIcons = {
+        'Present': 'bi-check-circle-fill',
+        'Absent': 'bi-x-circle-fill',
+        'Night': 'bi-moon-stars-fill',
+        'Double': 'bi-sun-fill',
+        'Half': 'bi-circle-half',
+        'On Leave': 'bi-calendar-check-fill',
+        'Unmarked': 'bi-dash-circle-fill'
+    };
+    
+    const icon = statusIcons[status] || 'bi-check-circle-fill';
+    
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        z-index: 99999;
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+        padding: 28px 32px;
+        border-radius: 16px;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+        max-width: 450px;
+        min-width: 350px;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    `;
+    
+    toast.innerHTML = `
+        <div style="text-align: center;">
+            <div style="width: 72px; height: 72px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,0.3);">
+                <i class="bi ${icon}" style="font-size: 36px;"></i>
+            </div>
+            <div style="font-weight: bold; font-size: 18px; margin-bottom: 12px;">
+                ✓ Attendance Updated Successfully
+            </div>
+            <div style="opacity: 0.95; margin-bottom: 10px; font-size: 14px;">
+                <strong>Employees:</strong> ${employeeNames}
+            </div>
+            <div style="display: flex; gap: 20px; opacity: 0.9; font-size: 14px; justify-content: center; margin-bottom: 16px;">
+                <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px;">
+                    <i class="bi bi-tag-fill me-1"></i>Status: <strong>${status}</strong>
+                </span>
+                <span style="background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px;">
+                    <i class="bi bi-people-fill me-1"></i>Count: <strong>${count}</strong>
+                </span>
+            </div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 13px; opacity: 0.85;">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refreshing page...
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        overlay.style.opacity = '1';
+        toast.style.opacity = '1';
+        toast.style.transform = 'translate(-50%, -50%) scale(1)';
+    }, 10);
+    
+    // Wait 3 seconds then refresh
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+            if (document.body.contains(overlay)) {
+                document.body.removeChild(overlay);
+            }
+        }, 300);
+        
+        // Refresh page
+        if (refreshCallback) {
+            refreshCallback();
+        } else {
+            forcePageRefresh();
+        }
+    }, 3000);
+}
+
+// Open create attendance modal
+function openCreateAttendanceModal() {
+    fetch('{% url "attendance:attendance_create_modal" %}', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('attendanceModalContainer').innerHTML = data.html;
+            const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+            modal.show();
+            bindAttendanceForm();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Open update attendance modal
+function openUpdateAttendanceModal(attendanceId) {
+    fetch(`{% url "attendance:attendance_update_modal" 0 %}`.replace('0', attendanceId), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('attendanceModalContainer').innerHTML = data.html;
+            const modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+            modal.show();
+            bindAttendanceForm();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Open delete attendance modal
+function openDeleteAttendanceModal(attendanceId) {
+    fetch(`{% url "attendance:attendance_delete_modal" 0 %}`.replace('0', attendanceId), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('attendanceDeleteModalContainer').innerHTML = data.html;
+            const modal = new bootstrap.Modal(document.getElementById('deleteAttendanceModal'));
+            modal.show();
+            bindDeleteForm();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Bind attendance form submission
+function bindAttendanceForm() {
+    const form = document.getElementById('attendanceModal')?.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const actionUrl = form.action || window.location.href;
+            submitAttendanceForm(form, actionUrl);
+        });
+    }
+}
+
+// Submit attendance form
+function submitAttendanceForm(form, url) {
+    fetch(url, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else if (data.form_html) {
+            document.querySelector('#attendanceModal .modal-body').innerHTML = data.form_html;
+            bindAttendanceForm();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Bind delete form submission
+function bindDeleteForm() {
+    const form = document.getElementById('deleteAttendanceModal')?.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitDeleteForm(form);
+        });
+    }
+}
+
+// Submit delete form
+function submitDeleteForm(form) {
+    fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 </script>
 {% endblock %}

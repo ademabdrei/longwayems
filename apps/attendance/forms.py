@@ -5,6 +5,7 @@ from django import forms
 from .models import Attendance
 from apps.employees.models import Employee
 from apps.sites.models import Site
+from apps.projects.models import Project
 
 
 class AttendanceForm(forms.ModelForm):
@@ -15,6 +16,7 @@ class AttendanceForm(forms.ModelForm):
         fields = [
             'employee',
             'site',
+            'project',
             'date',
             'status',
             'overtime_hours',
@@ -25,6 +27,9 @@ class AttendanceForm(forms.ModelForm):
                 'class': 'form-select',
             }),
             'site': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'project': forms.Select(attrs={
                 'class': 'form-select',
             }),
             'date': forms.DateInput(attrs={
@@ -63,6 +68,14 @@ class AttendanceBulkForm(forms.Form):
             'class': 'form-select',
         }),
         label='Site (Optional)'
+    )
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.filter(status='Active'),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+        }),
+        label='Project (Optional)'
     )
     employees = forms.ModelMultipleChoiceField(
         queryset=Employee.objects.filter(status='Active'),

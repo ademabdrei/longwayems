@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'attendance:attendance_list' %}" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <h2 class="d-inline align-middle">
+                <i class="bi bi-calendar-check me-2"></i>Quick Attendance - {{ site.site_name }}
+            </h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance:bulk_mark_site_attendance' site.pk %}?date={{ date }}"
+               class="btn btn-success">
+                <i class="bi bi-check-all me-1"></i>Mark All Present
+            </a>
+            <button type="button" class="btn btn-primary" onclick="openCreateAttendanceModal()">
+                <i class="bi bi-plus-lg me-1"></i>Add Individual
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Select Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ date }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Go
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Total Employees</h6>
+                        <h3 class="mb-0 mt-2">{{ employees_with_attendance|length }}</h3>
+                    </div>
+                    <i class="bi bi-people display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Present</h6>
+                        <h3 class="mb-0 mt-2">{{ employees_with_attendance|length|add:"0" }}</h3>
+                    </div>
+                    <i class="bi bi-check-circle display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Absent</h6>
+                        <h3 class="mb-0 mt-2">0</h3>
+                    </div>
+                    <i class="bi bi-x-circle display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-gradient-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 opacity-75">Unmarked</h6>
+                        <h3 class="mb-0 mt-2">{{ employees_with_attendance|length }}</h3>
+                    </div>
+                    <i class="bi bi-question-circle display-6 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee List -->
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="bi bi-list-check me-2"></i>Employees Assigned to {{ site.site_name }}
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if employees_with_attendance %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Position</th>
+                            <th>Status</th>
+                            <th>Attendance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in employees_with_attendance %}
+                        <tr id="employee-row-{{ item.employee.pk }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if item.employee.profile_picture %}
+                                    <img src="{{ item.employee.profile_picture.url }}"
+                                         alt="{{ item.employee.full_name }}"
+                                         class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                    <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                         style="width: 40px; height: 40px;">
+                                        {{ item.employee.first_name|first|upper }}{{ item.employee.last_name|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-semibold">{{ item.employee.full_name }}</div>
+                                        <small class="text-muted">{{ item.employee.email|default:'' }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ item.employee.position }}</td>
+                            <td>
+                                {% if item.attendance %}
+                                <span class="badge bg-{% if item.attendance.status == 'Present' %}success{% elif item.attendance.status == 'Absent' %}danger{% elif item.attendance.status == 'On Leave' %}primary{% elif item.attendance.status in 'Night,Double,Half' %}info{% else %}secondary{% endif %}">
+                                    {{ item.attendance.status }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Not Marked</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.attendance %}
+                                <small class="text-muted">
+                                    Marked by: {{ item.attendance.created_by.get_full_name|default:'System' }}
+                                </small>
+                                {% else %}
+                                <small class="text-muted">No record for this date</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if item.attendance %}
+                                    <button type="button"
+                                            class="btn btn-outline-success btn-toggle-attendance"
+                                            data-employee-id="{{ item.employee.pk }}"
+                                            data-current-status="{{ item.attendance.status }}">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Toggle
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-warning"
+                                            onclick="openUpdateAttendanceModal({{ item.attendance.pk }})">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-danger"
+                                            onclick="openDeleteAttendanceModal({{ item.attendance.pk }})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="button"
+                                            class="btn btn-outline-success btn-mark-attendance"
+                                            data-employee-id="{{ item.employee.pk }}"
+                                            data-action="mark_present">
+                                        <i class="bi bi-check-lg me-1"></i>Present
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-mark-attendance"
+                                            data-employee-id="{{ item.employee.pk }}"
+                                            data-action="mark_absent">
+                                        <i class="bi bi-x-lg me-1"></i>Absent
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people display-1 text-muted"></i>
+                <h5 class="mt-3 text-muted">No employees assigned to this site</h5>
+                <p class="text-muted mb-0">Assign employees to this site first.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="attendanceModalContainer"></div>
+<div id="deleteAttendanceModalContainer"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Mark attendance (Present/Absent)
+document.querySelectorAll('.btn-mark-attendance').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const employeeId = this.dataset.employeeId;
+        const action = this.dataset.action;
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: new URLSearchParams({
+                'employee_id': employeeId,
+                'action': action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    });
+});
+
+// Toggle attendance status
+document.querySelectorAll('.btn-toggle-attendance').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const employeeId = this.dataset.employeeId;
+        const currentStatus = this.dataset.currentStatus;
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: new URLSearchParams({
+                'employee_id': employeeId,
+                'action': 'toggle'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    });
+});
+
+function openCreateAttendanceModal() {
+    fetchAttendanceModal('{% url "attendance:attendance_create_modal" %}?site={{ site.pk }}');
+}
+
+function openUpdateAttendanceModal(attendancePk) {
+    fetchAttendanceModal(`{% url "attendance:attendance_update_modal" 0 %}`.replace('0', attendancePk));
+}
+
+function openDeleteAttendanceModal(attendancePk) {
+    fetchAttendanceModal(`{% url "attendance:attendance_delete_modal" 0 %}`.replace('0', attendancePk));
+}
+
+function fetchAttendanceModal(url) {
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) return;
+        document.getElementById('attendanceModalContainer').innerHTML = data.html;
+        const modalElement = document.querySelector('#attendanceModal, #deleteAttendanceModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        const form = modalElement.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                submitAttendanceModal(form, url, modalElement.id);
+            });
+        }
+    });
+}
+
+function submitAttendanceModal(form, url, modalId) {
+    fetch(url, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        return { ok: response.ok, data };
+    })
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            window.location.reload();
+            return;
+        }
+
+        if (data.form_html) {
+            document.querySelector(`#${modalId} .modal-body`).innerHTML = data.form_html;
+            const formElement = document.querySelector(`#${modalId} form`);
+            formElement.addEventListener('submit', function(event) {
+                event.preventDefault();
+                submitAttendanceModal(formElement, url, modalId);
+            }, { once: true });
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
